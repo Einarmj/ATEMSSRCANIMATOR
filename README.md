@@ -54,11 +54,13 @@ On first load, enter your ATEM's IP address and click **Connect**. Once connecte
 
 ---
 
-## Configuration
+## Port Configuration
 
-| Environment variable | Default | Description |
+| Method | Example | Description |
 |---|---|---|
-| `PORT` | `9876` | HTTP port the server listens on (overrides the interactive prompt) |
+| Default | _(just run the server)_ | Starts on port `9876` |
+| Argument | `node server.js --port=8080` | Use a specific port |
+| Env var | `PORT=8080 npm start` | Set port via environment variable |
 
 ---
 
