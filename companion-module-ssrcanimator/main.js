@@ -161,7 +161,7 @@ class SSRCAnimatorInstance extends InstanceBase {
                 id: 'port',
                 label: 'Port',
                 width: 12,
-                default: '3000',
+                default: '9876',
                 regex: Regex.PORT,
             },
         ]
