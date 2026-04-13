@@ -2,3 +2,5 @@
 node_modules/
 companion-module-ssrcanimator/node_modules/
 *.log
+config.json
+presets.json

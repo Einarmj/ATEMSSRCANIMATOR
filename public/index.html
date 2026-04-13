@@ -225,7 +225,7 @@
                     <label>SS:</label>
                     <select id="preset-ss">
                         <option value="0">SuperSource 1</option>
-                        <option value="1">SuperSource 2</option>
+                        <option value="1" id="preset-ss-opt1" style="display:none">SuperSource 2</option>
                     </select>
                     <button id="save-preset-btn">Save Current State</button>
                 </div>
@@ -249,7 +249,7 @@
                 </div>
             </div>
 
-            <div class="section">
+            <div class="section" id="ss1-section" style="display:none">
                 <h2>SuperSource 2</h2>
                 <div class="box-btns">
                     <button class="large-btn" data-ss="1" data-box="0">Box 1 Large</button>

@@ -4,6 +4,7 @@ class AtemService {
     constructor() {
         this.atem = new Atem();
         this.connected = false;
+        this.superSourceCount = 0;
         this.localState = { 0: null, 1: null };
 
         this.atem.on('connected', () => {
@@ -11,14 +12,15 @@ class AtemService {
             console.log('ATEM connected');
             setTimeout(() => {
                 try {
-                    this.localState[0] = this._readFromAtem(0);
-                    this.localState[1] = this._readFromAtem(1);
-                    console.log('Seeded SS0:', JSON.stringify(this.localState[0]));
-                    console.log('Seeded SS1:', JSON.stringify(this.localState[1]));
+                    this.superSourceCount = this.atem.state.info?.capabilities?.superSources ?? 2;
+                    console.log(`ATEM has ${this.superSourceCount} SuperSource(s)`);
 
                     const { setActivePreset } = require('./layoutLogic');
-                    setActivePreset(0, this.localState[0]);
-                    setActivePreset(1, this.localState[1]);
+                    for (let i = 0; i < this.superSourceCount; i++) {
+                        this.localState[i] = this._readFromAtem(i);
+                        console.log(`Seeded SS${i}:`, JSON.stringify(this.localState[i]));
+                        setActivePreset(i, this.localState[i]);
+                    }
                 } catch (e) {
                     console.error('Failed to seed state:', e);
                 }
@@ -60,6 +62,10 @@ class AtemService {
             });
         }
         return { boxes };
+    }
+
+    getSuperSourceCount() {
+        return this.superSourceCount;
     }
 
     getSuperSourceState(ssId) {

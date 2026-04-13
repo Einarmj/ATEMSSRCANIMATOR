@@ -30,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // WebSocket connection handler
 wss.on('connection', (ws) => {
     console.log('Companion connected');
-    ws.send(JSON.stringify({ type: 'state', state }));
+    ws.send(JSON.stringify({ type: 'state', state, superSourceCount: atemService.getSuperSourceCount() }));
     ws.on('close', () => console.log('Companion disconnected'));
 });
 
@@ -44,15 +44,29 @@ function broadcastState(ssId) {
     });
 }
 
-atemService.connect(process.env.ATEM_IP || '').catch(err => {
-    console.error('Autoconnect failed:', err.message);
-});
+const CONFIG_FILE = path.join(__dirname, 'config.json');
+
+function loadConfig() {
+    try { return JSON.parse(require('fs').readFileSync(CONFIG_FILE, 'utf8')); } catch { return {}; }
+}
+
+function saveConfig(cfg) {
+    require('fs').writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2));
+}
+
+const savedIp = process.env.ATEM_IP || loadConfig().atemIp || '';
+if (savedIp) {
+    atemService.connect(savedIp).catch(err => console.error('Autoconnect failed:', err.message));
+}
 
 // Connect
 app.post('/api/connect', async (req, res) => {
     const { ip } = req.body;
     try {
         await atemService.connect(ip);
+        const cfg = loadConfig();
+        cfg.atemIp = ip;
+        saveConfig(cfg);
         res.json({ ok: true });
     } catch (err) {
         res.status(500).json({ ok: false, error: err.message });
@@ -123,6 +137,11 @@ app.delete('/api/presets/:name', (req, res) => {
 // List all presets (builtins + saved)
 app.get('/api/presets', (req, res) => {
     res.json(mergeBuiltinPresets(loadPresets()));
+});
+
+// Device info (SuperSource count, saved IP etc.)
+app.get('/api/info', (_req, res) => {
+    res.json({ superSourceCount: atemService.getSuperSourceCount(), atemIp: loadConfig().atemIp || '' });
 });
 
 // List available easing functions

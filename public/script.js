@@ -119,6 +119,17 @@ const wsState = {
     1: { preset: null, largeBox: null, advancedMode: false },
 }
 
+function applySuperSourceCount(count) {
+    const ss1Section = document.getElementById('ss1-section')
+    const ss1Opt = document.getElementById('preset-ss-opt1')
+    const show = count >= 2
+    ss1Section.style.display = show ? '' : 'none'
+    ss1Opt.style.display = show ? '' : 'none'
+    if (!show && document.getElementById('preset-ss').value === '1') {
+        document.getElementById('preset-ss').value = '0'
+    }
+}
+
 function applyFeedback() {
     // Preset rows
     document.querySelectorAll('.preset-row').forEach(row => {
@@ -163,8 +174,9 @@ function connectFeedbackSocket() {
         try {
             const msg = JSON.parse(event.data)
             if (msg.type === 'state') {
+                if (msg.superSourceCount !== undefined) applySuperSourceCount(msg.superSourceCount)
                 wsState[0] = { preset: msg.state[0].preset, largeBox: msg.state[0].largeBox, advancedMode: msg.state[0].advancedMode }
-                wsState[1] = { preset: msg.state[1].preset, largeBox: msg.state[1].largeBox, advancedMode: msg.state[1].advancedMode }
+                if (msg.state[1]) wsState[1] = { preset: msg.state[1].preset, largeBox: msg.state[1].largeBox, advancedMode: msg.state[1].advancedMode }
                 applyFeedback()
             } else if (msg.type === 'stateChange') {
                 wsState[msg.ssId] = { preset: msg.state.preset, largeBox: msg.state.largeBox, advancedMode: msg.state.advancedMode }
@@ -176,6 +188,15 @@ function connectFeedbackSocket() {
     ws.addEventListener('close', () => setTimeout(connectFeedbackSocket, 3000))
 }
 
+async function loadInfo() {
+    try {
+        const info = await fetch('/api/info').then(r => r.json())
+        applySuperSourceCount(info.superSourceCount)
+        if (info.atemIp) document.getElementById('atem-ip').value = info.atemIp
+    } catch (e) { /* ignore */ }
+}
+
 connectFeedbackSocket();
 loadEasingOptions();
 loadPresetList();
+loadInfo();
