@@ -27,7 +27,7 @@ A web-based controller for animated ATEM SuperSource layout transitions. Create 
 ## Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ssrcanimator.git
+git clone https://github.com/Einarmj/ssrcanimator.git
 cd ssrcanimator
 npm install
 ```
