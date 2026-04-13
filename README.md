@@ -85,6 +85,8 @@ The server exposes a REST API for programmatic control:
 
 ## Bitfocus Companion Module
 
+> **Note:** The goal is to officially publish this as a Companion module on the [Bitfocus Module Store](https://bitfocus.io/connections) when time allows. For now, it can be loaded as a developer module as described below.
+
 A Companion module is included in the `companion-module-ssrcanimator/` directory.
 
 ```bash
