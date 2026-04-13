@@ -48,7 +48,7 @@ Or in development mode with auto-reload:
 npm run dev
 ```
 
-The web UI is available at `http://localhost:3000`.
+The web UI by default is available at `http://localhost:9876`.
 
 On first load, enter your ATEM's IP address and click **Connect**. Once connected, you can load presets and animate between layouts.
 
