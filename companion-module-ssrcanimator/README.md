@@ -28,7 +28,7 @@ npm install
 1. Go to **Connections** in the Companion sidebar
 2. Click **Add connection**
 3. Search for **SSRCANIMATOR** — it should appear under your dev modules
-4. Click it, then configure the host and port (default: `localhost:3000`)
+4. Click it, then configure the host and port (default: `localhost:9876`)
 5. Click **Save**
 
 ### Step 4 — Updating the module
@@ -51,7 +51,7 @@ If you make changes to the module code, you need to restart Companion for them t
 
 ## Requirements
 
-- SSRCANIMATOR server running on accessible network (default: localhost:3000)
+- SSRCANIMATOR server running on accessible network (default: localhost:9876)
 - Bitfocus Companion 2.0+
 - Node.js 14+ (for development)
 
@@ -67,13 +67,13 @@ To test the module locally:
 
 ### Instance Settings
 - **Host** - IP address or hostname of SSRCANIMATOR server (default: localhost)
-- **Port** - Port number of SSRCANIMATOR server (default: 3000)
+- **Port** - Port number of SSRCANIMATOR server (default: 9876)
 
 ## Troubleshooting
 
 ### Module not connecting
-- Verify SSRCANIMATOR server is running: `npm start` in main directory
-- Check host and port in Companion settings
+- Verify SSRCANIMATOR server is running: `npm start` in main directory — note the port it starts on
+- Check host and port in Companion settings match what the server is using
 - Look at Companion logs for connection errors
 
 ### Actions not working

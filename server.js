@@ -10,7 +10,13 @@ const { loadPresets, savePresets, mergeBuiltinPresets } = require('./src/presets
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const PORT = process.env.PORT || 3000;
+
+function resolvePort() {
+    if (process.env.PORT) return parseInt(process.env.PORT, 10);
+    const arg = process.argv.find(a => a.startsWith('--port='));
+    if (arg) return parseInt(arg.split('=')[1], 10);
+    return 9876;
+}
 
 // Track current state for Companion
 const state = {
@@ -212,6 +218,7 @@ app.get('/api/layout/:ss', (req, res) => {
     res.json(atemService.getSuperSourceState(parseInt(req.params.ss, 10)));
 });
 
+const PORT = resolvePort();
 server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });

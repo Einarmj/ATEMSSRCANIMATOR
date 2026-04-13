@@ -58,7 +58,7 @@ On first load, enter your ATEM's IP address and click **Connect**. Once connecte
 
 | Environment variable | Default | Description |
 |---|---|---|
-| `PORT` | `3000` | HTTP port the server listens on |
+| `PORT` | `9876` | HTTP port the server listens on (overrides the interactive prompt) |
 
 ---
 
