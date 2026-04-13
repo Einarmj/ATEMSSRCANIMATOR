@@ -2,7 +2,7 @@
 
 A web-based controller for animated ATEM SuperSource layout transitions. Create presets, animate smooth transitions between multi-box layouts, and integrate with Bitfocus Companion for broadcast automation.
 
-> **Note:** This project was written with the assistance of [Claude](https://claude.ai) by Anthropic.
+> **AI-assisted code:** This project was written with the help of [Claude](https://claude.ai) by Anthropic. While it has been tested and works for its intended purpose, there may be bugs or edge cases that haven't been caught. Use it at your own risk, and feel free to open an issue if you run into problems.
 
 ---
 

@@ -2,26 +2,38 @@
 
 This is a Bitfocus Companion module for controlling SSRCANIMATOR - an ATEM SuperSource layout animator.
 
-## Installation
+> **Status:** This module is currently in development and not yet available in the official Companion module store. It will be released properly at a later date. For now, use the developer mode instructions below to load it manually.
 
-1. Clone or copy this module to your Companion modules directory:
-   ```bash
-   ~/.bitfocus-companion/modules/companion-module-ssrcanimator
-   ```
+## Installation via Developer Mode (Current Method)
 
-2. Install dependencies:
-   ```bash
-   cd companion-module-ssrcanimator
-   npm install
-   ```
+Companion's developer mode lets you load modules directly from a local folder without waiting for an official release.
 
-3. Restart Bitfocus Companion
+### Step 1 — Enable developer mode in Companion
 
-4. Add a new instance:
-   - Go to **Settings > Instances**
-   - Click **Add instance**
-   - Search for **SSRCANIMATOR**
-   - Configure the host and port (default: localhost:3000)
+1. Open the Companion web interface (usually `http://localhost:8888`)
+2. Go to **Settings** (the gear icon in the sidebar)
+3. Scroll down to find **Developer modules path**
+4. Enter the full path to the folder that *contains* the module — this should be the parent folder, not the module folder itself. For example, if the module lives at `/Users/you/modules/companion-module-ssrcanimator`, enter `/Users/you/modules`
+5. Click **Save** and restart Companion
+
+### Step 2 — Install module dependencies
+
+```bash
+cd companion-module-ssrcanimator
+npm install
+```
+
+### Step 3 — Add the instance in Companion
+
+1. Go to **Connections** in the Companion sidebar
+2. Click **Add connection**
+3. Search for **SSRCANIMATOR** — it should appear under your dev modules
+4. Click it, then configure the host and port (default: `localhost:3000`)
+5. Click **Save**
+
+### Step 4 — Updating the module
+
+If you make changes to the module code, you need to restart Companion for them to take effect. There is no hot-reload in developer mode.
 
 ## Features
 
