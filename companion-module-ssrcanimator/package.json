@@ -1,0 +1,16 @@
+{
+    "name": "companion-module-ssrcanimator",
+    "version": "1.0.0",
+    "description": "Bitfocus Companion module for SSRCANIMATOR",
+    "main": "main.js",
+    "license": "MIT",
+    "author": "SSRCANIMATOR",
+    "dependencies": {
+        "@companion-module/base": "^1.0.0",
+        "axios": "^1.6.0",
+        "ws": "^8.0.0"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    }
+}

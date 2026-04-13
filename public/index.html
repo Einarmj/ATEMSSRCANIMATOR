@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>SuperSource Animator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin: 0 0 12px 0;
+            font-size: 0.85rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button {
+            padding: 9px 16px;
+            margin: 4px;
+            background: #444;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background: #555;
+        }
+
+        button.return-btn {
+            background: #1a4a1a;
+        }
+
+        button.return-btn:hover {
+            background: #2a6a2a;
+        }
+
+        button.delete-btn {
+            background: #4a1a1a;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        button.delete-btn:hover {
+            background: #6a2a2a;
+        }
+
+        input[type=text],
+        input[type=number],
+        select {
+            padding: 8px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            margin-right: 6px;
+        }
+
+        label {
+            margin-right: 6px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        #status {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .preset-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            padding: 6px;
+            background: #333;
+            border-radius: 6px;
+        }
+
+        .preset-name {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .preset-name small {
+            color: #aaa;
+        }
+
+        .box-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        button.active {
+            background: #cc0000;
+            color: #fff;
+        }
+
+        button.active:hover {
+            background: #dd1111;
+        }
+
+        button.return-btn.has-large {
+            background: #4a2a00;
+        }
+
+        button.return-btn.has-large:hover {
+            background: #6a3a00;
+        }
+
+        button.advanced-btn {
+            background: #2a2a4a;
+            border: 1px solid #444;
+        }
+
+        button.advanced-btn:hover {
+            background: #3a3a5a;
+        }
+
+        button.advanced-btn.active {
+            background: #cc0000;
+            border-color: #ff3333;
+        }
+
+        button.advanced-btn.active:hover {
+            background: #dd1111;
+        }
+
+        .advanced-note {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        .active-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #cc0000;
+            color: #fff;
+            margin-left: 4px;
+        }
+
+        /* ── Two-column layout ─────────────────────────────────────────────── */
+        .two-col {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .presets-col {
+            flex: 2 1 300px;
+        }
+
+        .controls-col {
+            flex: 1 1 220px;
+        }
+
+        .presets-col .section,
+        .controls-col .section {
+            margin-bottom: 20px;
+        }
+
+        .controls-col .section:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>SuperSource Animator</h1>
+
+    <div class="section">
+        <h2>Connection</h2>
+        <label>ATEM IP:</label>
+        <input id="atem-ip" type="text" value="10.180.103.11" style="width:160px" />
+        <button id="connect-btn">Connect</button>
+        <div id="status">Auto-connecting on start...</div>
+    </div>
+
+    <div class="section">
+        <h2>Settings</h2>
+        <label>Duration (ms):</label>
+        <input id="duration" type="number" value="500" style="width:80px" />
+        <label style="margin-left:12px">Easing:</label>
+        <select id="easing"></select>
+    </div>
+
+    <div class="two-col">
+        <div class="presets-col">
+            <div class="section">
+                <h2>Presets</h2>
+                <div style="margin-bottom:10px">
+                    <input id="preset-name" type="text" placeholder="Preset name" style="width:160px" />
+                    <label>SS:</label>
+                    <select id="preset-ss">
+                        <option value="0">SuperSource 1</option>
+                        <option value="1">SuperSource 2</option>
+                    </select>
+                    <button id="save-preset-btn">Save Current State</button>
+                </div>
+                <div id="preset-list"></div>
+            </div>
+        </div>
+
+        <div class="controls-col">
+            <div class="section">
+                <h2>SuperSource 1</h2>
+                <div class="box-btns">
+                    <button class="large-btn" data-ss="0" data-box="0">Box 1 Large</button>
+                    <button class="large-btn" data-ss="0" data-box="1">Box 2 Large</button>
+                    <button class="large-btn" data-ss="0" data-box="2">Box 3 Large</button>
+                    <button class="large-btn" data-ss="0" data-box="3">Box 4 Large</button>
+                    <button class="return-btn" data-ss="0">↩ Return</button>
+                </div>
+                <div style="margin-top:10px">
+                    <button class="advanced-btn" data-ss="0">Advanced Mode: OFF</button>
+                    <div class="advanced-note">When ON: Box 2 Large swaps layers before enlarging (2-box presets only)</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>SuperSource 2</h2>
+                <div class="box-btns">
+                    <button class="large-btn" data-ss="1" data-box="0">Box 1 Large</button>
+                    <button class="large-btn" data-ss="1" data-box="1">Box 2 Large</button>
+                    <button class="large-btn" data-ss="1" data-box="2">Box 3 Large</button>
+                    <button class="large-btn" data-ss="1" data-box="3">Box 4 Large</button>
+                    <button class="return-btn" data-ss="1">↩ Return</button>
+                </div>
+                <div style="margin-top:10px">
+                    <button class="advanced-btn" data-ss="1">Advanced Mode: OFF</button>
+                    <div class="advanced-note">When ON: Box 2 Large swaps layers before enlarging (2-box presets only)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

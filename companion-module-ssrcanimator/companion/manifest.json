@@ -1,0 +1,29 @@
+{
+    "$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+    "id": "companion-module-ssrcanimator",
+    "name": "SSRCANIMATOR",
+    "shortname": "ssrcanimator",
+    "description": "ATEM SuperSource layout animator with smooth animated transitions",
+    "version": "1.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/yourusername/companion-module-ssrcanimator",
+    "bugs": "https://github.com/yourusername/companion-module-ssrcanimator/issues",
+    "maintainers": [
+        { "name": "SSRCANIMATOR" }
+    ],
+    "runtime": {
+        "type": "node22",
+        "api": "nodejs-ipc",
+        "apiVersion": "0.0.0",
+        "entrypoint": "../main.js"
+    },
+    "manufacturer": "SSRCANIMATOR",
+    "products": ["SSRCANIMATOR"],
+    "keywords": [
+        "atem",
+        "blackmagic",
+        "supersource",
+        "animation"
+    ],
+    "legacyIds": []
+}

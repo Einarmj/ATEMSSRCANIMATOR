@@ -1,0 +1,4 @@
+
+node_modules/
+companion-module-ssrcanimator/node_modules/
+*.log
