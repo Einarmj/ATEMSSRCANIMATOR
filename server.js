@@ -44,7 +44,7 @@ function broadcastState(ssId) {
     });
 }
 
-atemService.connect('10.180.103.11').catch(err => {
+atemService.connect(process.env.ATEM_IP || '').catch(err => {
     console.error('Autoconnect failed:', err.message);
 });
 

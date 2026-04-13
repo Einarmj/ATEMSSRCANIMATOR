@@ -54,4 +54,4 @@ atem.on('connected', () => {
 
 atem.on('error', console.error);
 
-atem.connect('10.180.103.11');
+atem.connect(process.env.ATEM_IP || '');
