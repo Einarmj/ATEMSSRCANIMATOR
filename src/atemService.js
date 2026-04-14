@@ -6,20 +6,30 @@ class AtemService {
         this.connected = false;
         this.superSourceCount = 0;
         this.localState = { 0: null, 1: null };
+        this._listeners = { connected: [], disconnected: [] };
+
+        this._seeded = false;
 
         this.atem.on('connected', () => {
             this.connected = true;
+            this._listeners.connected.forEach(cb => cb());
             console.log('ATEM connected');
             setTimeout(() => {
                 try {
                     this.superSourceCount = this.atem.state.info?.capabilities?.superSources ?? 2;
                     console.log(`ATEM has ${this.superSourceCount} SuperSource(s)`);
 
+                    // Always update localState so forceReseed has a valid baseline,
+                    // but only call setActivePreset on the very first connection —
+                    // reconnects must not overwrite the user's current active preset.
+                    const firstSeed = !this._seeded;
+                    this._seeded = true;
+
                     const { setActivePreset } = require('./layoutLogic');
                     for (let i = 0; i < this.superSourceCount; i++) {
                         this.localState[i] = this._readFromAtem(i);
                         console.log(`Seeded SS${i}:`, JSON.stringify(this.localState[i]));
-                        setActivePreset(i, this.localState[i]);
+                        if (firstSeed) setActivePreset(i, this.localState[i]);
                     }
                 } catch (e) {
                     console.error('Failed to seed state:', e);
@@ -29,6 +39,7 @@ class AtemService {
 
         this.atem.on('disconnected', () => {
             this.connected = false;
+            this._listeners.disconnected.forEach(cb => cb());
             console.log('ATEM disconnected');
         });
 
@@ -64,13 +75,21 @@ class AtemService {
         return { boxes };
     }
 
+    on(event, cb) {
+        if (this._listeners[event]) this._listeners[event].push(cb);
+    }
+
     getSuperSourceCount() {
         return this.superSourceCount;
     }
 
     getSuperSourceState(ssId) {
         if (!this.localState[ssId]) {
-            this.localState[ssId] = this._readFromAtem(ssId);
+            try {
+                this.localState[ssId] = this._readFromAtem(ssId);
+            } catch (e) {
+                return null;
+            }
         }
         return this.localState[ssId];
     }

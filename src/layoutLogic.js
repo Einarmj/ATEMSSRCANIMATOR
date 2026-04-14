@@ -48,6 +48,9 @@ function createReturnLayout(ssId) {
         ? cloneLayout(activePreset[ssId])
         : cloneLayout(current);
 
+    // Preserve whatever sources are live now — only animate positions/sizes back
+    target.boxes.forEach((box, i) => { box.source = current.boxes[i].source; });
+
     largeMode[ssId] = false;
 
     return { start: current, target };
@@ -85,13 +88,14 @@ function createAdvancedLargeLayout(ssId, boxIndex) {
     if (boxIndex !== secondaryIdx) return null; // primary box — use normal path
 
     const preset = activePreset[ssId];
+    const current = atemService.getSuperSourceState(ssId);
 
-    // Swap state: mirror boxes enabled at preset positions, originals disabled
+    // Swap state: mirror boxes enabled at preset positions with live sources, originals disabled
     const swapState = {
         boxes: [0, 1, 2, 3].map(i => {
-            if (i === mirrorSecondaryIdx) return { ...preset.boxes[secondaryIdx], enabled: true };
-            if (i === mirrorPrimaryIdx)   return { ...preset.boxes[primaryIdx],   enabled: true };
-            return { ...preset.boxes[i], enabled: false };
+            if (i === mirrorSecondaryIdx) return { ...preset.boxes[secondaryIdx], source: current.boxes[secondaryIdx].source, enabled: true };
+            if (i === mirrorPrimaryIdx)   return { ...preset.boxes[primaryIdx],   source: current.boxes[primaryIdx].source,   enabled: true };
+            return { ...preset.boxes[i], source: current.boxes[i].source, enabled: false };
         })
     };
 
@@ -123,16 +127,19 @@ function createAdvancedReturnLayout(ssId) {
     const preset = activePreset[ssId];
     const current = atemService.getSuperSourceState(ssId);
 
-    // Animate mirrors back to their home positions (same as original preset boxes)
+    // Animate mirrors back to their home positions, preserving live sources
     const preSwapTarget = {
         boxes: current.boxes.map((box, i) => {
-            if (i === mirrorSecondaryIdx) return { ...preset.boxes[secondaryIdx], enabled: true };
-            if (i === mirrorPrimaryIdx)   return { ...preset.boxes[primaryIdx],   enabled: true };
+            if (i === mirrorSecondaryIdx) return { ...preset.boxes[secondaryIdx], source: current.boxes[i].source, enabled: true };
+            if (i === mirrorPrimaryIdx)   return { ...preset.boxes[primaryIdx],   source: current.boxes[i].source, enabled: true };
             return { ...box, enabled: false };
         })
     };
 
-    return { start: current, preSwapTarget, finalState: cloneLayout(preset) };
+    const finalState = cloneLayout(preset);
+    finalState.boxes.forEach((box, i) => { box.source = current.boxes[i].source; });
+
+    return { start: current, preSwapTarget, finalState };
 }
 
 module.exports = { createLargeLayout, createReturnLayout, setActivePreset, getActivePreset, getAdvancedBoxIndices, createAdvancedLargeLayout, createAdvancedReturnLayout };

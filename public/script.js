@@ -24,9 +24,14 @@ function getEasing() {
     return document.getElementById('easing').value || 'easeInOutQuad';
 }
 
+document.getElementById('duration').addEventListener('change', () => {
+    localStorage.setItem('ssrc_duration', document.getElementById('duration').value);
+});
+
 async function loadEasingOptions() {
     const easings = await fetch('/api/easings').then(r => r.json());
     const sel = document.getElementById('easing');
+    const savedEasing = localStorage.getItem('ssrc_easing') || 'easeInOutQuad';
     const labels = {
         linear: 'Linear',
         easeInQuad: 'Ease In',
@@ -43,22 +48,32 @@ async function loadEasingOptions() {
         const opt = document.createElement('option');
         opt.value = key;
         opt.textContent = labels[key] || key;
-        if (key === 'easeInOutQuad') opt.selected = true;
+        if (key === savedEasing) opt.selected = true;
         sel.appendChild(opt);
     });
+    sel.addEventListener('change', () => localStorage.setItem('ssrc_easing', sel.value));
+
+    const savedDuration = localStorage.getItem('ssrc_duration');
+    if (savedDuration) document.getElementById('duration').value = savedDuration;
 }
+
+let ssCount = 1;
 
 async function loadPresetList() {
     const presets = await fetch('/api/presets').then(r => r.json());
     const container = document.getElementById('preset-list');
     container.innerHTML = '';
-    Object.entries(presets).forEach(([name, preset]) => {
+    Object.entries(presets).forEach(([name]) => {
         const div = document.createElement('div');
         div.className = 'preset-row';
         div.dataset.name = name;
+        const ss2btn = ssCount >= 2
+            ? `<button class="load-btn" data-ss="1" onclick="loadPreset('${name}', 1)">Load SS2</button>`
+            : '';
         div.innerHTML = `
-            <span class="preset-name">${name} <small>(SS${parseInt(preset.ssId) + 1})</small></span>
-            <button onclick="loadPreset('${name}')">Load</button>
+            <span class="preset-name">${name}</span>
+            <button class="load-btn" data-ss="0" onclick="loadPreset('${name}', 0)">Load SS1</button>
+            ${ss2btn}
             <button class="delete-btn" onclick="deletePreset('${name}')">Delete</button>
         `;
         container.appendChild(div);
@@ -66,28 +81,50 @@ async function loadPresetList() {
     applyFeedback();
 }
 
-async function loadPreset(name) {
-    await postJson('/api/presets/load', { name, durationMs: getDuration(), easing: getEasing() });
+async function loadPreset(name, ssId) {
+    await postJson('/api/presets/load', { name, ssId, durationMs: getDuration(), easing: getEasing() });
 }
 
 async function deletePreset(name) {
+    if (!confirm(`Delete preset "${name}"?`)) return;
     await deleteJson(`/api/presets/${name}`);
     loadPresetList();
+}
+
+let _flashInterval = null
+
+function setConnectionStatus(connected) {
+    const btn = document.getElementById('connect-btn')
+    const status = document.getElementById('status')
+    if (_flashInterval) { clearInterval(_flashInterval); _flashInterval = null; }
+    if (connected) {
+        status.textContent = 'Connected'
+        btn.style.background = '#1a6a1a'
+    } else {
+        status.textContent = 'ATEM disconnected'
+        let on = true
+        _flashInterval = setInterval(() => {
+            btn.style.background = on ? '#cc0000' : ''
+            on = !on
+        }, 500)
+    }
 }
 
 document.getElementById('connect-btn').addEventListener('click', async () => {
     const ip = document.getElementById('atem-ip').value;
     const result = await postJson('/api/connect', { ip });
-    document.getElementById('status').textContent = result.ok ? 'Connected' : 'Failed: ' + result.error;
+    if (!result.ok) document.getElementById('status').textContent = 'Failed: ' + result.error;
 });
 
-document.getElementById('save-preset-btn').addEventListener('click', async () => {
+async function savePreset(ssId) {
     const name = document.getElementById('preset-name').value.trim();
-    const ssId = parseInt(document.getElementById('preset-ss').value, 10);
     if (!name) return alert('Enter a preset name');
     await postJson('/api/presets/save', { name, ssId });
     loadPresetList();
-});
+}
+
+document.getElementById('save-ss0-btn').addEventListener('click', () => savePreset(0));
+document.getElementById('save-ss1-btn').addEventListener('click', () => savePreset(1));
 
 document.querySelectorAll('.large-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -120,28 +157,21 @@ const wsState = {
 }
 
 function applySuperSourceCount(count) {
-    const ss1Section = document.getElementById('ss1-section')
-    const ss1Opt = document.getElementById('preset-ss-opt1')
+    const changed = count !== ssCount
+    ssCount = count
     const show = count >= 2
-    ss1Section.style.display = show ? '' : 'none'
-    ss1Opt.style.display = show ? '' : 'none'
-    if (!show && document.getElementById('preset-ss').value === '1') {
-        document.getElementById('preset-ss').value = '0'
-    }
+    document.getElementById('ss1-section').style.display = show ? '' : 'none'
+    document.getElementById('save-ss1-btn').style.display = show ? '' : 'none'
+    if (changed) loadPresetList()
 }
 
 function applyFeedback() {
-    // Preset rows
+    // Preset load buttons
     document.querySelectorAll('.preset-row').forEach(row => {
         const name = row.dataset.name
-        row.querySelectorAll('.active-badge').forEach(b => b.remove())
-        ;[0, 1].forEach(ss => {
-            if (wsState[ss].preset === name) {
-                const badge = document.createElement('span')
-                badge.className = 'active-badge'
-                badge.textContent = `SS${ss + 1}`
-                row.querySelector('.preset-name').appendChild(badge)
-            }
+        row.querySelectorAll('.load-btn').forEach(btn => {
+            const ss = parseInt(btn.dataset.ss, 10)
+            btn.classList.toggle('active', wsState[ss].preset === name)
         })
     })
 
@@ -173,7 +203,10 @@ function connectFeedbackSocket() {
     ws.addEventListener('message', (event) => {
         try {
             const msg = JSON.parse(event.data)
-            if (msg.type === 'state') {
+            if (msg.type === 'atemStatus') {
+                setConnectionStatus(msg.connected)
+            } else if (msg.type === 'state') {
+                if (msg.atemConnected !== undefined) setConnectionStatus(msg.atemConnected)
                 if (msg.superSourceCount !== undefined) applySuperSourceCount(msg.superSourceCount)
                 wsState[0] = { preset: msg.state[0].preset, largeBox: msg.state[0].largeBox, advancedMode: msg.state[0].advancedMode }
                 if (msg.state[1]) wsState[1] = { preset: msg.state[1].preset, largeBox: msg.state[1].largeBox, advancedMode: msg.state[1].advancedMode }
@@ -191,6 +224,7 @@ function connectFeedbackSocket() {
 async function loadInfo() {
     try {
         const info = await fetch('/api/info').then(r => r.json())
+        setConnectionStatus(info.atemConnected)
         applySuperSourceCount(info.superSourceCount)
         if (info.atemIp) document.getElementById('atem-ip').value = info.atemIp
     } catch (e) { /* ignore */ }

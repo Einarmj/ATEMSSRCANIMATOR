@@ -159,17 +159,6 @@
             margin-top: 8px;
         }
 
-        .active-badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: #cc0000;
-            color: #fff;
-            margin-left: 4px;
-        }
-
         /* ── Two-column layout ─────────────────────────────────────────────── */
         .two-col {
             display: flex;
@@ -222,12 +211,8 @@
                 <h2>Presets</h2>
                 <div style="margin-bottom:10px">
                     <input id="preset-name" type="text" placeholder="Preset name" style="width:160px" />
-                    <label>SS:</label>
-                    <select id="preset-ss">
-                        <option value="0">SuperSource 1</option>
-                        <option value="1" id="preset-ss-opt1" style="display:none">SuperSource 2</option>
-                    </select>
-                    <button id="save-preset-btn">Save Current State</button>
+                    <button id="save-ss0-btn">Save SS1</button>
+                    <button id="save-ss1-btn" style="display:none">Save SS2</button>
                 </div>
                 <div id="preset-list"></div>
             </div>

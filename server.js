@@ -30,9 +30,55 @@ app.use(express.static(path.join(__dirname, 'public')));
 // WebSocket connection handler
 wss.on('connection', (ws) => {
     console.log('Companion connected');
-    ws.send(JSON.stringify({ type: 'state', state, superSourceCount: atemService.getSuperSourceCount() }));
+    ws.send(JSON.stringify({ type: 'state', state, superSourceCount: atemService.getSuperSourceCount(), atemConnected: atemService.connected }));
     ws.on('close', () => console.log('Companion disconnected'));
 });
+
+// Broadcast ATEM connection status to all WebSocket clients
+function broadcastAtemStatus(connected) {
+    const message = JSON.stringify({ type: 'atemStatus', connected });
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) client.send(message);
+    });
+}
+
+let hasRestoredPresets = false;
+
+atemService.on('connected', () => {
+    broadcastAtemStatus(true);
+
+    // Restore previously active presets only once at startup, not on reconnects
+    if (hasRestoredPresets) return;
+    hasRestoredPresets = true;
+
+    setTimeout(() => {
+        try {
+            const cfg = loadConfig();
+            const saved = cfg.activePresets || {};
+            const allPresets = mergeBuiltinPresets(loadPresets());
+
+            for (const ssId of [0, 1]) {
+                const name = saved[ssId];
+                if (!name || !allPresets[name]) continue;
+                const layout = allPresets[name].layout;
+                const current = atemService.getSuperSourceState(ssId);
+                if (!current) continue;
+
+                const restored = {
+                    boxes: layout.boxes.map((b, i) => ({ ...b, source: current.boxes[i].source }))
+                };
+                setActivePreset(ssId, restored);
+
+                state[ssId].preset = name;
+                broadcastState(ssId);
+                console.log(`Restored active preset "${name}" for SS${ssId}`);
+            }
+        } catch (e) {
+            console.error('Failed to restore active presets:', e);
+        }
+    }, 1200);
+});
+atemService.on('disconnected', () => broadcastAtemStatus(false));
 
 // Broadcast state change to all connected Companion instances
 function broadcastState(ssId) {
@@ -51,7 +97,9 @@ function loadConfig() {
 }
 
 function saveConfig(cfg) {
-    require('fs').writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2));
+    require('fs').writeFile(CONFIG_FILE, JSON.stringify(cfg, null, 2), err => {
+        if (err) console.error('Failed to save config:', err);
+    });
 }
 
 const savedIp = process.env.ATEM_IP || loadConfig().atemIp || '';
@@ -117,6 +165,12 @@ app.post('/api/presets/load', (req, res) => {
     state[ssId].boxes = targetLayout.boxes;
     state[ssId].largeBox = null;
     state[ssId].swapped = false;
+
+    const cfg = loadConfig();
+    cfg.activePresets = cfg.activePresets || {};
+    cfg.activePresets[ssId] = name;
+    saveConfig(cfg);
+
     broadcastState(ssId);
 
     console.log(`Loaded preset "${name}" onto SS${ssId}`);
@@ -141,7 +195,7 @@ app.get('/api/presets', (req, res) => {
 
 // Device info (SuperSource count, saved IP etc.)
 app.get('/api/info', (_req, res) => {
-    res.json({ superSourceCount: atemService.getSuperSourceCount(), atemIp: loadConfig().atemIp || '' });
+    res.json({ superSourceCount: atemService.getSuperSourceCount(), atemIp: loadConfig().atemIp || '', atemConnected: atemService.connected });
 });
 
 // List available easing functions
@@ -178,6 +232,7 @@ app.post('/api/ss/:ss/box/:box/large', (req, res) => {
     console.log(`SS${ssId} Box${boxIndex} large (advancedMode=${state[ssId].advancedMode})`);
 
     cancelAnimation(ssId);
+    atemService.forceReseed(ssId);
 
     if (state[ssId].advancedMode) {
         const advanced = createAdvancedLargeLayout(ssId, boxIndex);
@@ -208,6 +263,7 @@ app.post('/api/ss/:ss/return', (req, res) => {
     const { durationMs = 500, easing = DEFAULT_EASING } = req.body;
 
     cancelAnimation(ssId);
+    atemService.forceReseed(ssId);
 
     if (state[ssId].advancedMode && state[ssId].swapped) {
         const advanced = createAdvancedReturnLayout(ssId);

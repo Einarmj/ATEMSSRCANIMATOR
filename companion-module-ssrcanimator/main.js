@@ -2,7 +2,7 @@ const { InstanceBase, InstanceStatus, Regex, runEntrypoint } = require('@compani
 const axios = require('axios')
 const { getActions } = require('./actions')
 const { getFeedbacks } = require('./feedbacks')
-const { getVariables } = require('./variables')
+const { getVariables, getPresetSlotValues } = require('./variables')
 const { getPresets } = require('./companion-presets')
 
 class SSRCAnimatorInstance extends InstanceBase {
@@ -68,6 +68,7 @@ class SSRCAnimatorInstance extends InstanceBase {
                 await this.updatePresetList()
                 this.setupActions()
                 this.setupFeedbacks()
+                this.setupVariables()
                 this.setupPresets()
             })
 
@@ -116,7 +117,7 @@ class SSRCAnimatorInstance extends InstanceBase {
     }
 
     setupVariables() {
-        this.setVariableDefinitions(getVariables())
+        this.setVariableDefinitions(getVariables(this.presets))
         this.updateVariables()
     }
 
@@ -124,6 +125,7 @@ class SSRCAnimatorInstance extends InstanceBase {
         this.setVariableValues({
             'ss0_preset': this.state[0].preset || 'None',
             'ss1_preset': this.state[1].preset || 'None',
+            ...getPresetSlotValues(this.presets),
         })
     }
 
